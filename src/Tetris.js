@@ -310,6 +310,30 @@ export default function Tetris() {
         color: activeShape.color
       });
     }
+
+    //draw shadow shape
+    for (let y = 0; y < 20; y++) {
+      let newShape = activeShape.getCopy();
+      newShape.y += y;
+      newShape.coords.forEach(coordinate => {
+        coordinate._y += y;
+      });
+
+      let collision = wouldCollide(newShape);
+
+      if (collision) {
+        newShape._y--;
+        newShape.coords.forEach(coordinate => {
+          coordinate._y--;
+          gridMap.set(coordinate._x + "," + coordinate._y, {
+            x: coordinate._x,
+            y: coordinate._y,
+            color: "grey"
+          });
+        });
+        break;
+      }
+    }
   }
 
   for (let shape of shapes) {
@@ -342,7 +366,7 @@ export default function Tetris() {
       {grid.map((cell, index) => (
         <div
           className={classes.cell}
-          key={index}  
+          key={index}
           style={{ backgroundColor: cell.color }}
         ></div>
       ))}
