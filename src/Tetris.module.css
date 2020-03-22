@@ -1,0 +1,22 @@
+.grid {
+  width: 410px;
+  height: 820px;
+  background-color: black;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  color: limegreen;
+}
+
+.cell {
+  width: 40px;
+  height: 40px;
+  border-right: 1px solid white;
+  border-bottom: 1px solid white;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
