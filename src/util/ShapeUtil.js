@@ -131,6 +131,7 @@ export const createNewShape = type => {
     default:
       break;
   }
+  index++;
   return shape;
 };
 

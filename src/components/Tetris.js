@@ -6,6 +6,7 @@ import MiniGrid from "./MiniGrid";
 export default function Tetris() {
   const [ticks, setTicks] = useState(0);
   const lastTick = useRef(0);
+  const [gameOver, setGameOver] = useState(false);
   const {
     shapes,
     activeShape,
@@ -16,8 +17,10 @@ export default function Tetris() {
     generateNewActiveShape,
     wouldCollide,
     saveShape,
-    savedShape
-  } = useShapes();
+    savedShape,
+    queue,
+    reset
+  } = useShapes(setGameOver);
 
   const [skipTick, setSkipTick] = useState(-1);
 
@@ -34,6 +37,13 @@ export default function Tetris() {
       clearInterval(gameLoopHandler);
     };
   }, []);
+
+  useEffect(() => {
+    if (gameOver) {
+      setGameOver(false);
+      reset();
+    }
+  }, [gameOver, reset]);
 
   useEffect(() => {
     //generate initial shape to start the game
@@ -108,7 +118,7 @@ export default function Tetris() {
     return () => {
       document.removeEventListener("keydown", keyDownEventHandler, false);
     };
-  }, [moveShape, rotateShape, dropShape, skipTick]);
+  }, [moveShape, rotateShape, dropShape, skipTick, saveShape]);
 
   //Create grid array to render shapes
   let grid = [];
@@ -169,12 +179,27 @@ export default function Tetris() {
       } else {
         grid.push({
           x: x,
-          y: y,
-          color: "black"
+          y: y
         });
       }
     }
   }
+
+  const getBgColor = (x, y) => {
+    if (y % 2 === 0) {
+      if (x % 2 !== 0) {
+        return "#2e2e2e";
+      } else {
+        return "#272727";
+      }
+    } else {
+      if (x % 2 === 0) {
+        return "#2e2e2e";
+      } else {
+        return "#272727";
+      }
+    }
+  };
 
   return (
     <div className={classes.flexContainer}>
@@ -189,13 +214,21 @@ export default function Tetris() {
           <div
             className={classes.cell}
             key={index}
-            style={{ backgroundColor: cell.color }}
+            style={{
+              backgroundColor: cell.color || getBgColor(cell.x, cell.y)
+            }}
           ></div>
         ))}
       </div>
       <div className={classes.shapeContainer}>
         <span>Next:</span>
-        <div className={classes.shapeBox}>Nig</div>
+        <div className={classes.shapeBox}>
+          {queue.map(shape => (
+            <div className={classes.miniGrid}>
+              <MiniGrid shape={shape} />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -7,13 +7,19 @@ import {
 } from "../util/ShapeUtil";
 import * as Vec2D from "vector2d";
 
-const useShapes = () => {
+const useShapes = setGameOver => {
   const [shapes, setShapes] = useState([]);
   const [activeShape, setActiveShape] = useState();
   const { wouldCollide } = useCollision(shapes);
   const [savedShape, setSavedShape] = useState();
   const [canSaveShape, setCanSaveShape] = useState(true);
   const [queue, setQueue] = useState([]);
+
+  const reset = () => {
+    setQueue([]);
+    setShapes([]);
+    setActiveShape(null);
+  };
 
   const saveShape = () => {
     //saveShape();
@@ -32,8 +38,26 @@ const useShapes = () => {
   };
 
   const generateNewActiveShape = useCallback(() => {
-    setActiveShape(generateRandomShape());
-  }, []);
+    setQueue(queue => {
+      let queueCopy = [...queue];
+
+      if (queueCopy.length === 0) {
+        for (let i = 0; i < 5; i++) {
+          queueCopy.push(generateRandomShape());
+        }
+      }
+      let nextShape = queueCopy.shift();
+      queueCopy = queueCopy.filter(s => s.id !== nextShape.id);
+      queueCopy.push(generateRandomShape());
+
+      if (wouldCollide(nextShape)) {
+        setGameOver(true);
+      }
+      setActiveShape(nextShape);
+
+      return queueCopy;
+    });
+  }, [wouldCollide, setGameOver]);
 
   const forceActiveShapeDown = useCallback(() => {
     let activeShapeCopy = activeShape.getCopy();
@@ -54,7 +78,7 @@ const useShapes = () => {
     //set current shape to null
 
     for (let y = 0; y < 20; y++) {
-      let newShape = activeShape.getCopy();
+      let newShape = activeShape?.getCopy();
       newShape.y += y;
       newShape.coords.forEach(coordinate => {
         coordinate._y += y;
@@ -241,7 +265,9 @@ const useShapes = () => {
     generateNewActiveShape,
     wouldCollide,
     saveShape,
-    savedShape
+    savedShape,
+    queue,
+    reset
   };
 };
 
