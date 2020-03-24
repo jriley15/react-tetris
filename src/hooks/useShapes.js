@@ -1,15 +1,38 @@
 import { useState, useCallback, useEffect } from "react";
 import useCollision from "./useCollision";
-import { createNewShape, rotateVector } from "../util/ShapeUtil";
+import {
+  createNewShape,
+  generateRandomShape,
+  rotateVector
+} from "../util/ShapeUtil";
 import * as Vec2D from "vector2d";
 
 const useShapes = () => {
   const [shapes, setShapes] = useState([]);
   const [activeShape, setActiveShape] = useState();
   const { wouldCollide } = useCollision(shapes);
+  const [savedShape, setSavedShape] = useState();
+  const [canSaveShape, setCanSaveShape] = useState(true);
+  const [queue, setQueue] = useState([]);
+
+  const saveShape = () => {
+    //saveShape();
+    if (canSaveShape) {
+      if (savedShape) {
+        //exchange active for saved
+        let activeCopy = createNewShape(activeShape.type);
+        setActiveShape(savedShape);
+        setSavedShape(activeCopy);
+      } else {
+        setSavedShape(createNewShape(activeShape.type));
+        generateNewActiveShape();
+      }
+      setCanSaveShape(false);
+    }
+  };
 
   const generateNewActiveShape = useCallback(() => {
-    setActiveShape(createNewShape());
+    setActiveShape(generateRandomShape());
   }, []);
 
   const forceActiveShapeDown = useCallback(() => {
@@ -20,9 +43,9 @@ const useShapes = () => {
       setActiveShape(activeShapeCopy);
     } else {
       setShapes([...shapes, activeShape]);
-      setActiveShape(createNewShape());
+      generateNewActiveShape();
     }
-  }, [activeShape, shapes, wouldCollide]);
+  }, [activeShape, shapes, wouldCollide, generateNewActiveShape]);
 
   const dropShape = useCallback(() => {
     //loop through shapes to find drop point
@@ -44,14 +67,14 @@ const useShapes = () => {
         newShape.coords.forEach(coordinate => {
           coordinate._y--;
         });
-        setActiveShape(createNewShape());
+        generateNewActiveShape();
         setShapes([...shapes, newShape]);
         //clearLines();
         //canSave = true;
         break;
       }
     }
-  }, [shapes, activeShape, wouldCollide]);
+  }, [shapes, activeShape, wouldCollide, generateNewActiveShape]);
 
   const moveShape = useCallback(
     (x, y) => {
@@ -185,6 +208,7 @@ const useShapes = () => {
         shapesCopy.forEach(shape => {
           if (shape.isNull()) {
             //this.deleteShape(shape.id);
+            setShapes(shapes.filter(s => s.id !== shape.id));
           }
         });
 
@@ -204,6 +228,7 @@ const useShapes = () => {
         setShapes(shapesCopy);
       }
     }
+    setCanSaveShape(true);
   }, [shapes, setShapes]);
 
   return {
@@ -214,7 +239,9 @@ const useShapes = () => {
     activeShape,
     forceActiveShapeDown,
     generateNewActiveShape,
-    wouldCollide
+    wouldCollide,
+    saveShape,
+    savedShape
   };
 };
 

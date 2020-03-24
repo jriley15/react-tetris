@@ -52,9 +52,12 @@ export class Shape {
   }
 }
 
-export const createNewShape = () => {
+export const generateRandomShape = () => {
   var type = Math.floor(Math.random() * 7);
+  return createNewShape(type);
+};
 
+export const createNewShape = type => {
   var x = 0;
   var y = 0;
   var coords = [];

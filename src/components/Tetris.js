@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import classes from "./Tetris.module.css";
 import useShapes from "../hooks/useShapes";
+import MiniGrid from "./MiniGrid";
 
 export default function Tetris() {
   const [ticks, setTicks] = useState(0);
@@ -13,8 +14,12 @@ export default function Tetris() {
     rotateShape,
     forceActiveShapeDown,
     generateNewActiveShape,
-    wouldCollide
+    wouldCollide,
+    saveShape,
+    savedShape
   } = useShapes();
+
+  const [skipTick, setSkipTick] = useState(-1);
 
   //Starts game loop
   useEffect(() => {
@@ -38,11 +43,14 @@ export default function Tetris() {
   //Forces shape down on every 500ms tick
   useEffect(() => {
     if (lastTick.current !== ticks) {
-      forceActiveShapeDown();
+      if (skipTick <= 0) {
+        forceActiveShapeDown();
+      }
+      if (skipTick > -1) setSkipTick(skipTick - 1);
 
       lastTick.current = ticks;
     }
-  }, [ticks, forceActiveShapeDown]);
+  }, [ticks, forceActiveShapeDown, skipTick]);
 
   //Sets up key press handlers for moving/rotating/dropping shapes
   useEffect(() => {
@@ -87,10 +95,12 @@ export default function Tetris() {
         dropShape();
       }
       if (controls.up) {
+        //reset interval
+        if (skipTick < 0) setSkipTick(1);
         rotateShape();
       }
       if (controls.c) {
-        //saveShape();
+        saveShape();
       }
     };
     document.addEventListener("keydown", keyDownEventHandler, false);
@@ -98,7 +108,7 @@ export default function Tetris() {
     return () => {
       document.removeEventListener("keydown", keyDownEventHandler, false);
     };
-  }, [moveShape, rotateShape, dropShape]);
+  }, [moveShape, rotateShape, dropShape, skipTick]);
 
   //Create grid array to render shapes
   let grid = [];
@@ -167,14 +177,26 @@ export default function Tetris() {
   }
 
   return (
-    <div className={classes.grid}>
-      {grid.map((cell, index) => (
-        <div
-          className={classes.cell}
-          key={index}
-          style={{ backgroundColor: cell.color }}
-        ></div>
-      ))}
+    <div className={classes.flexContainer}>
+      <div className={classes.shapeContainer}>
+        <span>Hold:</span>
+        <div className={classes.shapeBox}>
+          {savedShape && <MiniGrid shape={savedShape} />}
+        </div>
+      </div>
+      <div className={classes.grid}>
+        {grid.map((cell, index) => (
+          <div
+            className={classes.cell}
+            key={index}
+            style={{ backgroundColor: cell.color }}
+          ></div>
+        ))}
+      </div>
+      <div className={classes.shapeContainer}>
+        <span>Next:</span>
+        <div className={classes.shapeBox}>Nig</div>
+      </div>
     </div>
   );
 }
